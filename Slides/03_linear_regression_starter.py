@@ -17,6 +17,16 @@ import utils
 
 DATA_FILE = '../data/fire_theft.xls'
 
+# 函数要定义成 operation 的方式 -- 看起来似乎是 operation 可以使用 + - * ／ 操作符
+def huber_loss(labels,predictions,delta=1.0):
+	residual = tf.abs(predictions - labels)
+	conditon = tf.less(residual,delta)
+	small_res = 0.5 * tf.square(residual)
+	large_res = delta * residual - 0.5 * tf.square(delta)
+	# return tf.select(conditon,small_res,large_res) # select 被 where 替换
+	return tf.where(conditon,small_res,large_res)
+
+
 # Phase 1: Assemble the graph
 # Step 1: read in data from the .xls file
 book = xlrd.open_workbook(DATA_FILE, encoding_override='utf-8')
@@ -42,8 +52,8 @@ Y_predicted = X * w + b
 
 # Step 5: use the square error as the loss function
 # name your variable loss
-loss = tf.square(Y - Y_predicted,name='loss')
-
+# loss = tf.square(Y - Y_predicted,name='loss')
+loss = huber_loss(Y,Y_predicted)
 
 # Step 6: using gradient descent with learning rate of 0.01 to minimize loss
 trainOp = tf.train.GradientDescentOptimizer(learning_rate=0.001).minimize(loss=loss)
