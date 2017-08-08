@@ -44,12 +44,13 @@ Y = tf.placeholder(dtype=tf.float32, name='Y')
 
 # Step 3: create weight and bias, initialized to 0
 # name your variables w and b
-w = tf.Variable(0.0, trainable=True, name='weight')
+w1 = tf.Variable(0.0, trainable=True, name='weight1')
+w2 = tf.Variable(0.0, trainable=True, name='weight2')
 b = tf.Variable(0.0, trainable=True, name='bias')
 
 # Step 4: predict Y (number of theft) from the number of fire
 # name your variable Y_predicted
-Y_predicted = X * w + b
+Y_predicted = X * X *w1 + X * w2 + b
 # Y_predicted = tf.add(tf.multiply(w,X),b,name='Y_predicted')
 
 # Step 5: use the square error as the loss function
@@ -76,12 +77,13 @@ with tf.Session() as sess:
             _, l = sess.run([trainOp, loss], feed_dict={X: x, Y: y})
             total_loss += l
         print("Epoch {0}: {1}".format(i, total_loss / n_samples))
-        w1 = w.eval()
-        b1 = b.eval()
+    weight1,weight2,bias = sess.run([w1,w2,b])
+    print('***** result *****')
+    print(weight1,'x^2 +',weight2,'x +',bias)
 
 # plot the results
 X, Y = data.T[0], data.T[1]
 plt.plot(X, Y, 'bo', label='Real data')
-plt.plot(X, X * w1 + b1, 'r', label='Predicted data')
+plt.plot(X, X * X * weight1 + X * weight2 + bias, 'r', label='Predicted data')
 plt.legend()
 plt.show()
