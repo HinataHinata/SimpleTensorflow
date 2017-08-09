@@ -61,7 +61,6 @@ saver = tf.train.Saver()
 ## Op level random seed
 # my_var = tf.Variable(tf.truncated_normal((-1.0,1.0),stddev=0.1,seed=0))
 
-my_var = tf.Variable(tf.truncated_normal((-1.0, 1.0), stddev=0.1, seed=0))
 
 # with tf.Session() as sess:
 #     for i in range(100):
@@ -71,3 +70,63 @@ my_var = tf.Variable(tf.truncated_normal((-1.0, 1.0), stddev=0.1, seed=0))
 # with tf.Session() as sess:
 #     for i in range(100):
 #         print(sess.run(c))
+
+## Op level seed: each op keeps its own seed
+c = tf.random_uniform([], -10, 10, seed=2)
+d = tf.random_uniform([], -10, 10, seed=2)
+
+with tf.Session() as sess:
+    print(sess.run(c))  # 3.57493
+    print(sess.run(d))  # 3.57493
+
+## Graph level seed
+# seed = 2
+# tf.set_random_seed(seed)
+
+
+## problem with feed_dict
+# [Storage] -> [Client] -> [Worker]
+# Slow when Client and workers are on different machines
+
+## Data Readers
+# [Storage] -> [Worker]
+# Readers allow us to load data directly into the worker process
+
+## Data Readers Ops that return different values every time you call them (Think Python's generator)
+## Different Readers for different file types
+# tf.TextLineReader Outputs the lines of a file delimited by newlines E.g. text files CSV files
+# tf.FixedLengthRecordReader Outputs the entire file when all files have same fixed lengths E.g. each MNIST file has 28*28 pixels,CIFAR-10 32*32*3
+# tf.WholeFileReader Outputs the entire file content
+# tf.TFRecordReader Reads samples from TensorFlow's own binary format (TFRecord)
+# tf.ReaderBase To allow you to create your own readers
+
+## Read in files from queues
+# filename_queue = tf.train.string_input_producer(["file0.csv","file1.csv"])
+# reader = tf.TextLineReader()
+# key,value = reader.read(filename_queue)
+
+## tf.FIFOQueue
+q = tf.FIFOQueue(3,"float")
+init = q.enqueue_many(([0.,0.,0.],))
+x = q.dequeue()
+y = x+1
+q_inc = q.enqueue([y])
+sess1 = tf.Session()
+print(init.run(session = sess1))
+with tf.Session() as sess:
+    print(init.run()) # None
+    # print(init.run())
+    # print(q_inc.run())
+    # print(q_inc.run())
+    # print(q_inc.run())
+    # print(q_inc.run())
+
+## Threads & Queues You can use tf.Coordinator and tf.QueueRunner to manage your queues
+with tf.Session() as sess:
+    # start populating the file queue.
+    coord= tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
+
+
+
+
